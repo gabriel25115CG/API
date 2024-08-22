@@ -6,7 +6,7 @@ app.get('/', (req, res) => {
   res.send(`Hello ${name}!`);
 });
 
-const port = parseInt(process.env.PORT) || 3000;
+const port = parseInt(process.env.PORT) || 3001;
 app.listen(port, () => {
   console.log(`listening on port ${port}`);
 });

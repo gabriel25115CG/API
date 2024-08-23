@@ -109,3 +109,32 @@ export const updateUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to update user. ' + error.message });
   }
 };
+
+// Liste pour stocker les tokens invalidés
+let tokenBlacklist = [];
+
+// Vérifier si un token est dans la blacklist
+export const isTokenBlacklisted = (token) => {
+  return tokenBlacklist.includes(token);
+};
+
+
+export const signOut = async (req, res) => {
+  const token = req.headers['authorization']?.split(' ')[1];
+
+  if (!token) {
+    return res.status(400).json({ error: 'Token manquant' });
+  }
+
+  try {
+    // Ajouter le token à la blacklist
+    tokenBlacklist.push(token);
+
+    res.status(200).json({ message: 'Déconnexion réussie' });
+  } catch (error) {
+    console.error('Error during sign out:', error.message);
+    res.status(500).json({ error: 'Erreur lors de la déconnexion' });
+  }
+};
+
+

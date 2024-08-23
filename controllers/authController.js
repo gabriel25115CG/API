@@ -1,14 +1,33 @@
-// controllers/authController.js
+import admin from '../config/firebaseConfig.js'; // Assurez-vous que le chemin est correct
 
-import admin from '../config/firebaseConfig.js';
-import jwt from 'jsonwebtoken';
+const db = admin.firestore();
 
 // Inscription d'un utilisateur
 export const signUp = async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, firstName, lastName, phoneNumber, address } = req.body;
+
+  console.log('Received request body:', req.body);
+
+  if (!email || !password || !firstName || !lastName) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
   try {
+    // Créer l'utilisateur avec Firebase Authentication
     const userRecord = await admin.auth().createUser({ email, password });
+    console.log('User created successfully:', userRecord.uid);
+
+    // Ajouter les informations supplémentaires dans Firestore
+    const userRef = db.collection('users').doc(userRecord.uid);
+    await userRef.set({
+      firstName,
+      lastName,
+      phoneNumber,
+      address,
+      createdAt: new Date(),
+    });
+    console.log('User data added to Firestore:', { uid: userRecord.uid, firstName, lastName, phoneNumber, address });
+
     res.status(201).json({ uid: userRecord.uid, email: userRecord.email });
   } catch (error) {
     console.error('Error creating new user:', error.message);
@@ -20,8 +39,9 @@ export const signUp = async (req, res) => {
 export const signIn = async (req, res) => {
   const { email, password } = req.body;
 
+  console.log('Sign in request received:', { email });
+
   try {
-    // Authentification via Firebase Client SDK, ici une simplification
     const user = await admin.auth().getUserByEmail(email);
 
     const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');

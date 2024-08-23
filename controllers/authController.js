@@ -1,4 +1,5 @@
 import admin from '../config/firebaseConfig.js'; // Assurez-vous que le chemin est correct
+import jwt from 'jsonwebtoken';
 
 const db = admin.firestore();
 
@@ -42,17 +43,17 @@ export const signIn = async (req, res) => {
   console.log('Sign in request received:', { email });
 
   try {
+    // Authentifier l'utilisateur et récupérer ses informations
     const user = await admin.auth().getUserByEmail(email);
 
+    // Générer un token JWT
     const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
     const token = jwt.sign(
       { uid: user.uid, email: user.email },
       privateKey,
       { 
         algorithm: 'RS256',
-        expiresIn: '1h',
-        audience: process.env.JWT_AUDIENCE,
-        issuer: process.env.JWT_ISSUER
+        expiresIn: '5h',
       }
     );
 
@@ -77,5 +78,34 @@ export const verifyToken = async (req, res) => {
   } catch (error) {
     console.error('Error verifying token:', error.message);
     res.status(401).json({ error: 'Token invalide' });
+  }
+};
+
+// Mettre à jour les informations d'un utilisateur
+export const updateUser = async (req, res) => {
+  const { uid } = req.params;
+  const { firstName, lastName, phoneNumber, address } = req.body;
+
+  // Assurez-vous que l'utilisateur est authentifié et que l'UID correspond
+  if (!req.user || req.user.uid !== uid) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    // Référence au document de l'utilisateur dans Firestore
+    const userRef = db.collection('users').doc(uid);
+
+    // Mettre à jour les informations de l'utilisateur
+    await userRef.update({
+      firstName,
+      lastName,
+      phoneNumber,
+      address
+    });
+
+    res.status(200).json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    res.status(500).json({ error: 'Failed to update user. ' + error.message });
   }
 };

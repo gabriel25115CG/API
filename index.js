@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
 import firestoreRoutes from './routes/firestoreRoutes.js'; // Importer les routes Firestore
 import { validateEnv } from './utils/validateEnv.js';
+import { authenticateToken } from './middleware/authMiddleware.js'; // Importer le middleware d'authentification
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -18,6 +19,9 @@ app.use(express.json());
 // Définir les routes
 app.use('/api/auth', authRoutes);
 app.use('/api/firestore', firestoreRoutes); // Ajouter les routes Firestore
+
+// Utiliser le middleware d'authentification pour les routes nécessitant une authentification
+app.use('/api/auth/updateUser', authenticateToken); // Appliquer le middleware
 
 // Route de base
 app.get('/', (req, res) => {

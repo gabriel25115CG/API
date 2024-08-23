@@ -3,6 +3,7 @@
 import express from 'express';
 import { signUp, signIn, verifyToken } from '../controllers/authController.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
+import { updateUser } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -14,5 +15,8 @@ router.post('/signIn', signIn);
 
 // Route pour vérifier le token
 router.get('/verifyToken', authenticateToken, verifyToken);
+
+// Route pour modifier les infos 
+router.patch('/updateUser/:uid', authenticateToken, updateUser);
 
 export default router;

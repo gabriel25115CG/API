@@ -1,6 +1,9 @@
+// index.js
+
 import express from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/authRoutes.js';
+import firestoreRoutes from './routes/firestoreRoutes.js'; // Importer les routes Firestore
 import { validateEnv } from './utils/validateEnv.js';
 
 // Charger les variables d'environnement
@@ -14,6 +17,7 @@ app.use(express.json());
 
 // Définir les routes
 app.use('/api/auth', authRoutes);
+app.use('/api/firestore', firestoreRoutes); // Ajouter les routes Firestore
 
 // Route de base
 app.get('/', (req, res) => {
@@ -21,7 +25,7 @@ app.get('/', (req, res) => {
   res.send(`Hello ${name}!`);
 });
 
-// Utiliser le port défini dans .env ou un port par défaut
+// Utiliser le port défini dans .env ou un port par défaut si non défini
 const port = parseInt(process.env.PORT, 10) || 3001;
 
 // Démarrer le serveur

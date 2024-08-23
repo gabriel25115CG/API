@@ -160,3 +160,22 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete user. ' + error.message });
   }
 };
+
+export const getUserInfo = async (req, res) => {
+  const uid = req.user.uid; // UID de l'utilisateur authentifié
+
+  try {
+    // Référence au document de l'utilisateur dans Firestore
+    const userRef = db.collection('users').doc(uid);
+    const doc = await userRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json(doc.data());
+  } catch (error) {
+    console.error('Error getting user info:', error.message);
+    res.status(500).json({ error: 'Failed to get user info. ' + error.message });
+  }
+};

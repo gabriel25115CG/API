@@ -110,14 +110,8 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// Liste pour stocker les tokens invalidés
+// Déconnexion d'un utilisateur (invalidant le token côté serveur)
 let tokenBlacklist = [];
-
-// Vérifier si un token est dans la blacklist
-export const isTokenBlacklisted = (token) => {
-  return tokenBlacklist.includes(token);
-};
-
 
 export const signOut = async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
@@ -137,4 +131,32 @@ export const signOut = async (req, res) => {
   }
 };
 
+// Vérifier si le token est dans la blacklist
+export const isTokenBlacklisted = (token) => {
+  return tokenBlacklist.includes(token);
+};
 
+// Supprimer le compte d'un utilisateur
+export const deleteUser = async (req, res) => {
+  const { uid } = req.params;
+
+  // Assurez-vous que l'utilisateur est authentifié et que l'UID correspond
+  if (!req.user || req.user.uid !== uid) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+
+  try {
+    // Supprimer l'utilisateur de Firebase Authentication
+    await admin.auth().deleteUser(uid);
+    console.log('User deleted from Firebase Authentication:', uid);
+
+    // Supprimer les informations de l'utilisateur de Firestore
+    await db.collection('users').doc(uid).delete();
+    console.log('User data deleted from Firestore:', uid);
+
+    res.status(200).json({ message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting user:', error.message);
+    res.status(500).json({ error: 'Failed to delete user. ' + error.message });
+  }
+};

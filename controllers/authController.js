@@ -1,3 +1,5 @@
+// controllers/authController.js
+
 import admin from '../config/firebaseConfig.js';
 import jwt from 'jsonwebtoken';
 
@@ -6,12 +8,7 @@ export const signUp = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Création de l'utilisateur dans Firebase Auth
-    const userRecord = await admin.auth().createUser({
-      email,
-      password,
-    });
-    // Retourne les informations de l'utilisateur créé
+    const userRecord = await admin.auth().createUser({ email, password });
     res.status(201).json({ uid: userRecord.uid, email: userRecord.email });
   } catch (error) {
     console.error('Error creating new user:', error.message);
@@ -24,33 +21,22 @@ export const signIn = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Note: Firebase Admin SDK ne permet pas de vérifier les mots de passe directement.
-    // Vous devez vérifier le mot de passe via Firebase Client SDK ou autre méthode.
-
-    // Ici, on suppose que l'utilisateur existe (cela ne vérifie pas le mot de passe)
+    // Authentification via Firebase Client SDK, ici une simplification
     const user = await admin.auth().getUserByEmail(email);
 
-    // Clé privée pour signer le token
-    let privateKey = process.env.GOOGLE_PRIVATE_KEY;
-
-    // Assurez-vous que la clé privée est correctement formatée
-    if (privateKey.includes('\\n')) {
-      privateKey = privateKey.replace(/\\n/g, '\n');
-    }
-
-    // Génération du JWT
+    const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
     const token = jwt.sign(
-      { uid: user.uid, email: user.email },  // Payload du token
-      privateKey,  // Clé privée RSA
+      { uid: user.uid, email: user.email },
+      privateKey,
       { 
         algorithm: 'RS256',
         expiresIn: '1h',
-        audience: 'your-audience',  // Ajustez l'audience si nécessaire
-        issuer: 'your-issuer',      // Ajustez l'émetteur si nécessaire
+        audience: process.env.JWT_AUDIENCE,
+        issuer: process.env.JWT_ISSUER
       }
     );
 
-    res.status(200).json({ token });  // Retourne le token généré
+    res.status(200).json({ token });
   } catch (error) {
     console.error('Error signing in:', error.message);
     res.status(500).json({ error: 'Failed to sign in. ' + error.message });
@@ -59,7 +45,7 @@ export const signIn = async (req, res) => {
 
 // Vérifier l'authentification d'un token
 export const verifyToken = async (req, res) => {
-  const token = req.headers['authorization']?.split(' ')[1]; // Attendez-vous à un format `Bearer <token>`
+  const token = req.headers['authorization']?.split(' ')[1];
 
   if (!token) {
     return res.status(400).json({ error: 'Token manquant' });

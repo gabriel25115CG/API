@@ -1,22 +1,9 @@
-// firebaseConfig.js
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
+import path from 'path';
 
 // Charger les variables d'environnement
 dotenv.config();
-
-// Assurez-vous que les variables d'environnement nécessaires sont définies
-const requiredEnvVars = [
-  'GOOGLE_PRIVATE_KEY',
-  'GOOGLE_CLIENT_EMAIL',
-  'GOOGLE_PROJECT_ID'
-];
-
-requiredEnvVars.forEach((envVar) => {
-  if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`);
-  }
-});
 
 // Préparer la configuration pour Firebase Admin SDK
 const serviceAccount = {

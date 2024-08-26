@@ -1,11 +1,54 @@
-// routes/firestoreRoutes.js
-
 import express from 'express';
 import admin from '../config/firebaseConfig.js'; 
+
 const router = express.Router();
 const db = admin.firestore();
 
-// Route pour ajouter un document avec un ID généré automatiquement
+/**
+ * @swagger
+ * tags:
+ *   name: Firestore
+ *   description: API for interacting with Firestore
+ */
+
+/**
+ * @swagger
+ * /firestore/addDocument:
+ *   post:
+ *     summary: Add a document with an automatically generated ID
+ *     tags: [Firestore]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               collection:
+ *                 type: string
+ *                 description: The name of the Firestore collection
+ *                 example: users
+ *               data:
+ *                 type: object
+ *                 description: The data to store in the document
+ *                 example: { "name": "John Doe", "email": "johndoe@example.com" }
+ *     responses:
+ *       200:
+ *         description: Document added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 docId:
+ *                   type: string
+ *       400:
+ *         description: Bad request, missing required fields
+ *       500:
+ *         description: Server error
+ */
 router.post('/addDocument', async (req, res) => {
   const { collection, data } = req.body;
 
@@ -14,7 +57,6 @@ router.post('/addDocument', async (req, res) => {
       return res.status(400).json({ error: 'Collection and data are required.' });
     }
 
-    // Ajouter un document avec un ID généré automatiquement
     const docRef = await db.collection(collection).add(data);
     res.status(200).json({ message: 'Document ajouté avec succès', docId: docRef.id });
   } catch (error) {
@@ -23,7 +65,41 @@ router.post('/addDocument', async (req, res) => {
   }
 });
 
-// Route pour récupérer un document
+/**
+ * @swagger
+ * /firestore/getDocument:
+ *   get:
+ *     summary: Retrieve a document by its ID
+ *     tags: [Firestore]
+ *     parameters:
+ *       - in: query
+ *         name: collection
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the Firestore collection
+ *         example: users
+ *       - in: query
+ *         name: docId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the document to retrieve
+ *         example: abc123
+ *     responses:
+ *       200:
+ *         description: Document retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Bad request, missing required parameters
+ *       404:
+ *         description: Document not found
+ *       500:
+ *         description: Server error
+ */
 router.get('/getDocument', async (req, res) => {
   const { collection, docId } = req.query;
 

@@ -6,6 +6,8 @@ import authRoutes from './routes/authRoutes.js';
 import firestoreRoutes from './routes/firestoreRoutes.js'; // Importer les routes Firestore
 import { validateEnv } from './utils/validateEnv.js';
 import { authenticateToken } from './middleware/authMiddleware.js'; // Importer le middleware d'authentification
+import swaggerDocs from './swagger.js'; // Importez la configuration Swagger
+
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -40,3 +42,6 @@ app.listen(port, (err) => {
   }
   console.log(`Listening on port ${port}`);
 });
+
+swaggerDocs(app, port);
+

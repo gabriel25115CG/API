@@ -1,8 +1,7 @@
 // routes/firestoreRoutes.js
 
 import express from 'express';
-import admin from '../config/firebaseConfig.js'; // Assurez-vous que le chemin est correct
-
+import admin from '../config/firebaseConfig.js'; 
 const router = express.Router();
 const db = admin.firestore();
 

@@ -12,7 +12,7 @@ export const validateEnv = () => {
       'GOOGLE_TOKEN_URI',
       'GOOGLE_AUTH_PROVIDER_CERT_URL',
       'GOOGLE_CLIENT_CERT_URL',
-      'PORT' // Assurez-vous que le port est défini si vous l'utilisez
+      'PORT' 
     ];
   
     requiredEnvVars.forEach((envVar) => {

@@ -6,7 +6,7 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Votre API',
+      title: 'API Firebase Authentification',
       version: '1.0.0',
       description: 'Documentation de l\'API',
     },
@@ -16,7 +16,7 @@ const options = {
       },
     ],
   },
-  apis: ['./routes/*.js'], // Indiquez où Swagger doit chercher les définitions de routes
+  apis: ['./routes/*.js'], 
 };
 
 const swaggerSpec = swaggerJsdoc(options);

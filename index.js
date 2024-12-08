@@ -1,4 +1,3 @@
-// index.js
 
 import express from 'express';
 import dotenv from 'dotenv';
@@ -6,8 +5,7 @@ import authRoutes from './routes/authRoutes.js';
 import firestoreRoutes from './routes/firestoreRoutes.js'; // Importer les routes Firestore
 import { validateEnv } from './utils/validateEnv.js';
 import { authenticateToken } from './middleware/authMiddleware.js'; // Importer le middleware d'authentification
-import swaggerDocs from './swagger.js'; // Importez la configuration Swagger
-
+import { logEvents } from './middleware/logMiddleware.js'; // Assurez-vous que le chemin est correct
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -17,13 +15,9 @@ validateEnv();
 
 const app = express();
 app.use(express.json());
-
-// Définir les routes
 app.use('/api/auth', authRoutes);
-app.use('/api/firestore', firestoreRoutes); // Ajouter les routes Firestore
-
-// Utiliser le middleware d'authentification pour les routes nécessitant une authentification
-app.use('/api/auth/updateUser', authenticateToken); // Appliquer le middleware
+app.use('/api/firestore', firestoreRoutes); 
+app.use('/api/auth/updateUser', authenticateToken); 
 
 // Route de base
 app.get('/', (req, res) => {
@@ -31,8 +25,7 @@ app.get('/', (req, res) => {
   res.send(`Hello ${name}!`);
 });
 
-// Utiliser le port défini dans .env ou un port par défaut si non défini
-const port = parseInt(process.env.PORT, 10) || 3001;
+const port = parseInt(process.env.PORT, 10);
 
 // Démarrer le serveur
 app.listen(port, (err) => {
@@ -43,5 +36,4 @@ app.listen(port, (err) => {
   console.log(`Listening on port ${port}`);
 });
 
-swaggerDocs(app, port);
-
+app.use(logEvents);

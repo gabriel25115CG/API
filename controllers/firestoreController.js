@@ -1,6 +1,5 @@
-// controllers/firestoreController.js
 
-import admin from '../config/firebaseConfig.js'; // Assurez-vous que le chemin est correct
+import admin from '../config/firebaseConfig.js'; 
 
 const db = admin.firestore();
 

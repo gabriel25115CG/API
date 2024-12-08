@@ -1,4 +1,4 @@
-import admin from '../config/firebaseConfig.js'; // Assurez-vous que le chemin est correct
+import admin from '../config/firebaseConfig.js'; 
 import jwt from 'jsonwebtoken';
 
 const db = admin.firestore();
@@ -21,13 +21,21 @@ export const signUp = async (req, res) => {
     // Ajouter les informations supplémentaires dans Firestore
     const userRef = db.collection('users').doc(userRecord.uid);
     await userRef.set({
+      email,  // Ajouter l'email de l'utilisateur
       firstName,
       lastName,
       phoneNumber,
       address,
       createdAt: new Date(),
     });
-    console.log('User data added to Firestore:', { uid: userRecord.uid, firstName, lastName, phoneNumber, address });
+    console.log('User data added to Firestore:', { 
+      uid: userRecord.uid, 
+      email, 
+      firstName, 
+      lastName, 
+      phoneNumber, 
+      address 
+    });
 
     res.status(201).json({ uid: userRecord.uid, email: userRecord.email });
   } catch (error) {

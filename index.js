@@ -4,8 +4,14 @@ import { validateEnv } from './utils/validateEnv.js'; // Si tu as des variables 
 import { authenticateToken } from './middleware/authMiddleware.js'; // Middleware d'authentification
 import authRoutes from './routes/authRoutes.js';
 import firestoreRoutes from './routes/firestoreRoutes.js';
-import { httpRequestsTotal, httpRequestDurationSeconds } from './metrics.js';
+import { 
+  httpRequestsTotal, 
+  httpRequestDurationSeconds, 
+  httpRequestsByStatus, 
+  updateAvgResponseTime 
+} from './metrics.js'; // Importer les métriques
 import client from 'prom-client'; // Client Prometheus
+import winston from 'winston'; // Importer Winston
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -13,17 +19,36 @@ dotenv.config();
 // Valider les variables d'environnement
 validateEnv();
 
+// Configuration du logger avec Winston
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console({ format: winston.format.simple() }),
+    new winston.transports.File({ filename: 'api_logs.log' })
+  ],
+});
+
 // Créer l'application Express
 const app = express();
 app.use(express.json());
 
-// Middleware pour suivre les requêtes HTTP
+// Middleware pour logger chaque requête et suivre les métriques
 app.use((req, res, next) => {
+  const { method, url } = req;
+  const timestamp = new Date().toISOString();
+  
+  // Log l'appel d'API avec Winston
+  logger.info(`API Request: ${method} ${url} at ${timestamp}`);
+  
   const route = req.route ? req.route.path : req.url;
   const start = Date.now();
 
   res.on('finish', () => {
-    // Incrémenter le compteur pour chaque requête
+    // Incrémenter le compteur pour chaque requête HTTP
     httpRequestsTotal.inc({
       method: req.method,
       route: route,
@@ -36,6 +61,14 @@ app.use((req, res, next) => {
       method: req.method,
       route: route,
     }, duration);
+
+    // Mettre à jour la durée moyenne des requêtes
+    updateAvgResponseTime(duration);
+
+    // Suivre les statuts des réponses HTTP
+    httpRequestsByStatus.inc({
+      status: res.statusCode.toString(),
+    });
   });
 
   next();

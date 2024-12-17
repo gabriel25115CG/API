@@ -41,6 +41,8 @@ app.use((req, res, next) => {
   const { method, url } = req;
   const timestamp = new Date().toISOString();
   
+  // Log l'appel d'API avec Winston
+  logger.info(`API Request: ${method} ${url} at ${timestamp}`);
   
   const route = req.route ? req.route.path : req.url;
   const start = Date.now();

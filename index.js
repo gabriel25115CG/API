@@ -1,14 +1,15 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors'; // Importer le package CORS
 import { validateEnv } from './utils/validateEnv.js'; // Si tu as des variables d'env à valider
 import { authenticateToken } from './middleware/authMiddleware.js'; // Middleware d'authentification
 import authRoutes from './routes/authRoutes.js';
 import firestoreRoutes from './routes/firestoreRoutes.js';
-import { 
-  httpRequestsTotal, 
-  httpRequestDurationSeconds, 
-  httpRequestsByStatus, 
-  updateAvgResponseTime 
+import {
+  httpRequestsTotal,
+  httpRequestDurationSeconds,
+  httpRequestsByStatus,
+  updateAvgResponseTime
 } from './metrics.js'; // Importer les métriques
 import client from 'prom-client'; // Client Prometheus
 import winston from 'winston'; // Importer Winston
@@ -36,14 +37,22 @@ const logger = winston.createLogger({
 const app = express();
 app.use(express.json());
 
+// Configurer CORS pour autoriser toutes les origines
+const corsOptions = {
+  origin: 'http://heartsense.fr',  // Permet toutes les origines
+  methods: 'GET,POST,PUT,DELETE',  // Méthodes autorisées
+  allowedHeaders: 'Content-Type, Authorization',  // En-têtes autorisés
+};
+app.use(cors(corsOptions));  // Appliquer CORS à toutes les routes
+
 // Middleware pour logger chaque requête et suivre les métriques
 app.use((req, res, next) => {
   const { method, url } = req;
   const timestamp = new Date().toISOString();
-  
+
   // Log l'appel d'API avec Winston
   logger.info(`API Request: ${method} ${url} at ${timestamp}`);
-  
+
   const route = req.route ? req.route.path : req.url;
   const start = Date.now();
 
@@ -99,6 +108,6 @@ app.get('/metrics', async (req, res) => {
 
 // Démarrer le serveur
 const port = parseInt(process.env.PORT, 10);
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`API server listening on port ${port}`);
 });

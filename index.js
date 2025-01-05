@@ -39,7 +39,7 @@ app.use(express.json());
 
 // Configurer CORS pour autoriser toutes les origines
 const corsOptions = {
-  origin: 'http://heartsense.fr',  // Permet toutes les origines
+  origin: '*',  // Permet toutes les origines
   methods: 'GET,POST,PUT,DELETE',  // Méthodes autorisées
   allowedHeaders: 'Content-Type, Authorization',  // En-têtes autorisés
 };

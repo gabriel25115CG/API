@@ -1,13 +1,12 @@
-import admin from '../config/firebaseConfig.js'; 
+import admin from '../config/firebaseConfig.js';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
 
 const db = admin.firestore();
 
 // Inscription d'un utilisateur
 export const signUp = async (req, res) => {
   const { email, password, firstName, lastName, phoneNumber, address } = req.body;
-
-  console.log('Received request body:', req.body);
 
   if (!email || !password || !firstName || !lastName) {
     return res.status(400).json({ error: 'Missing required fields' });
@@ -16,25 +15,16 @@ export const signUp = async (req, res) => {
   try {
     // Créer l'utilisateur avec Firebase Authentication
     const userRecord = await admin.auth().createUser({ email, password });
-    console.log('User created successfully:', userRecord.uid);
 
     // Ajouter les informations supplémentaires dans Firestore
     const userRef = db.collection('users').doc(userRecord.uid);
     await userRef.set({
-      email,  // Ajouter l'email de l'utilisateur
+      email,
       firstName,
       lastName,
       phoneNumber,
       address,
       createdAt: new Date(),
-    });
-    console.log('User data added to Firestore:', { 
-      uid: userRecord.uid, 
-      email, 
-      firstName, 
-      lastName, 
-      phoneNumber, 
-      address 
     });
 
     res.status(201).json({ uid: userRecord.uid, email: userRecord.email });
@@ -48,18 +38,29 @@ export const signUp = async (req, res) => {
 export const signIn = async (req, res) => {
   const { email, password } = req.body;
 
-  console.log('Sign in request received:', { email });
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
 
   try {
-    // Authentifier l'utilisateur et récupérer ses informations
-    const user = await admin.auth().getUserByEmail(email);
+    // Vérifier les identifiants via l'API REST de Firebase
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_WEB_API_KEY}`,
+      {
+        email,
+        password,
+        returnSecureToken: true,
+      }
+    );
 
-    // Générer un token JWT
+    const { idToken, localId } = response.data;
+
+    // Générer un token JWT personnalisé (optionnel)
     const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
     const token = jwt.sign(
-      { uid: user.uid, email: user.email },
+      { uid: localId, email },
       privateKey,
-      { 
+      {
         algorithm: 'RS256',
         expiresIn: '5h',
       }
@@ -67,8 +68,8 @@ export const signIn = async (req, res) => {
 
     res.status(200).json({ token });
   } catch (error) {
-    console.error('Error signing in:', error.message);
-    res.status(500).json({ error: 'Failed to sign in. ' + error.message });
+    console.error('Error signing in:', error.response?.data?.error?.message || error.message);
+    res.status(401).json({ error: 'Invalid email or password' });
   }
 };
 
@@ -94,21 +95,17 @@ export const updateUser = async (req, res) => {
   const { uid } = req.params;
   const { firstName, lastName, phoneNumber, address } = req.body;
 
-  // Assurez-vous que l'utilisateur est authentifié et que l'UID correspond
   if (!req.user || req.user.uid !== uid) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
   try {
-    // Référence au document de l'utilisateur dans Firestore
     const userRef = db.collection('users').doc(uid);
-
-    // Mettre à jour les informations de l'utilisateur
     await userRef.update({
       firstName,
       lastName,
       phoneNumber,
-      address
+      address,
     });
 
     res.status(200).json({ message: 'User updated successfully' });
@@ -129,9 +126,7 @@ export const signOut = async (req, res) => {
   }
 
   try {
-    // Ajouter le token à la blacklist
     tokenBlacklist.push(token);
-
     res.status(200).json({ message: 'Déconnexion réussie' });
   } catch (error) {
     console.error('Error during sign out:', error.message);
@@ -148,19 +143,13 @@ export const isTokenBlacklisted = (token) => {
 export const deleteUser = async (req, res) => {
   const { uid } = req.params;
 
-  // Assurez-vous que l'utilisateur est authentifié et que l'UID correspond
   if (!req.user || req.user.uid !== uid) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
   try {
-    // Supprimer l'utilisateur de Firebase Authentication
     await admin.auth().deleteUser(uid);
-    console.log('User deleted from Firebase Authentication:', uid);
-
-    // Supprimer les informations de l'utilisateur de Firestore
     await db.collection('users').doc(uid).delete();
-    console.log('User data deleted from Firestore:', uid);
 
     res.status(200).json({ message: 'User deleted successfully' });
   } catch (error) {
@@ -169,11 +158,11 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+// Récupérer les informations de l'utilisateur connecté
 export const getUserInfo = async (req, res) => {
-  const uid = req.user.uid; // UID de l'utilisateur authentifié
+  const uid = req.user.uid;
 
   try {
-    // Référence au document de l'utilisateur dans Firestore
     const userRef = db.collection('users').doc(uid);
     const doc = await userRef.get();
 

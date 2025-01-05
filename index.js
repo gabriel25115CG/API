@@ -40,7 +40,7 @@ app.use(express.json());
 // Configurer CORS pour autoriser toutes les origines
 const corsOptions = {
   origin: '*',  // Permet toutes les origines
-  methods: 'GET,POST,PUT,DELETE',  // Méthodes autorisées
+  methods: 'GET,POST,PUT,PATCH,DELETE',  // Méthodes autorisées
   allowedHeaders: 'Content-Type, Authorization',  // En-têtes autorisés
 };
 app.use(cors(corsOptions));  // Appliquer CORS à toutes les routes
